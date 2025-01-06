@@ -3,7 +3,7 @@ const cors = require('cors');
 const axios = require('axios');
 require('dotenv').config();
 
-const DEEPSEEK_API_KEY = 'sk-e4a0c9ced69e4320aae4e18e31545b2c';
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 async function getAISummary(embedData) {
