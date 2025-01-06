@@ -4,14 +4,16 @@ A web application that extracts and displays information from TikTok videos usin
 
 ## Features
 
-- Extract video information from TikTok URLs
-- Display video details including:
-  - Author information
-  - Video description
-  - Hashtags
-  - Thumbnail preview
-- Clean and responsive user interface
-- Real-time validation of TikTok URLs
+- Paste any TikTok video URL to analyze
+- Get detailed AI analysis including:
+  - Problem the tutorial solves
+  - Technical requirements
+  - Step-by-step breakdown
+  - Potential challenges
+  - Target audience
+- View video metadata and hashtags
+- Clean, modern interface with proper formatting
+- Mobile-friendly design
 
 ## Tech Stack
 
@@ -50,7 +52,13 @@ cd ../server
 
 npm install
 
-3. Start the servers:
+3. Set up environment variables
+- Create a `.env` file in the server directory
+- Add your Deepseek API key:
+
+DEEPSEEK_API_KEY=your_api_key_here
+
+4. Start the application
 
 bash
 
@@ -74,5 +82,42 @@ npm run dev
 ## Coming Soon
 
 - Instagram support
-- Video content summarization
+
 - More detailed video analytics
+
+## Technologies Used
+
+- Frontend:
+  - React 18
+  - Vite
+  - Modern CSS with inline styles
+  - Responsive design
+
+- Backend:
+  - Node.js
+  - Express
+  - Axios for API requests
+
+- AI Integration:
+  - Deepseek API for content analysis
+  - Structured response formatting
+  - Markdown parsing and cleanup
+
+## Recent Updates
+
+- Added AI-powered video analysis
+- Improved response formatting
+- Enhanced UI with better readability
+- Added loading states
+- Fixed text selection visibility
+- Cleaned up markdown formatting
+- Optimized for longer responses
+
+## Development
+
+The application is structured as a full-stack JavaScript application:
+
+- `/client` - React frontend
+- `/server` - Express backend
+- Environment variables for API key management
+- Error handling and loading states
