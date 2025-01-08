@@ -52,11 +52,18 @@ cd ../server
 
 npm install
 
-3. Set up environment variables
-- Create a `.env` file in the server directory
-- Add your Deepseek API key:
 
+### 3. Environment Setup (Important!)
+
+1. In the `server` directory, copy the environment template:
+bash:tiktok-summarizer/README.md
+cp .env.example .env
+
+2. Edit the `.env` file and add your Deepseek API key:
+env
 DEEPSEEK_API_KEY=your_api_key_here
+
+**Note:** Never commit the `.env` file to version control. It's already in `.gitignore` for security.
 
 4. Start the application
 
@@ -66,10 +73,11 @@ Start backend (from server directory)
 
 npm start
 
-Start frontend (from client directory)
+In a new terminal, start the client (from client directory)
+
+cd client
 
 npm run dev
-
 
 4. Open `http://localhost:5173` in your browser
 
