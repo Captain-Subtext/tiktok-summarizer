@@ -1,26 +1,73 @@
-import { generateText } from '../lib/deepseek';
+import axios from 'axios';
+import { analyzeContent } from './contentAnalyzer';
 
 export async function generateAISummary(videoData: any): Promise<string> {
   try {
-    const prompt = `Analyze this TikTok video and provide a detailed breakdown:
+    const analysis = await analyzeContent(videoData.url);
+    
+    // Customize prompt based on content type
+    let contentPrompt = '';
+    switch (analysis.type) {
+      case 'speech':
+        contentPrompt = `
+Speech Content:
+${analysis.content.transcript || analysis.content.subtitles}
+`;
+        break;
+      case 'visual':
+        contentPrompt = `
+Visual Content:
+${analysis.content.visualDescription}
+`;
+        break;
+      case 'hybrid':
+        contentPrompt = `
+Speech Content:
+${analysis.content.transcript || analysis.content.subtitles}
 
+Visual Content:
+${analysis.content.visualDescription}
+`;
+        break;
+    }
+
+    const prompt = `Analyze this TikTok video based on its ${analysis.type} content:
+
+Video Information:
 Title: "${videoData.description}"
 Creator: ${videoData.author.name}
 Tags: ${videoData.hashtags.join(' ')}
 
-Please provide a comprehensive analysis including:
-1. What problem does this video solve?
-2. What are the key technical requirements?
-3. What are the main steps involved?
-4. What are potential challenges or limitations?
-5. Who would benefit most from this solution?
+${contentPrompt}
 
-Format your response as a clear, structured analysis with bullet points.`;
+Please provide a comprehensive summary of what actually happens in this video.`;
 
-    const response = await generateText(prompt);
-    return response;
+    const response = await axios.post(
+      'https://api.deepseek.com/v1/chat/completions',
+      {
+        model: "deepseek-chat",
+        messages: [{
+          role: "user",
+          content: prompt
+        }],
+        max_tokens: 1000,
+        temperature: 0.3
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.data?.choices?.[0]?.message?.content) {
+      throw new Error('Invalid AI response format');
+    }
+
+    return response.data.choices[0].message.content;
   } catch (error) {
     console.error('Error generating AI summary:', error);
-    throw new Error('Failed to generate AI summary');
+    throw new Error('Could not generate AI summary. Please try again.');
   }
 } 
