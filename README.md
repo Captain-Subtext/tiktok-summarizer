@@ -1,33 +1,40 @@
 # TikTok Summarizer
 
-A web application that extracts and displays information from TikTok videos using their oEmbed API.
+A tool that uses AI to generate summaries of TikTok videos.
 
 ## Features
 
-- Paste any TikTok video URL to analyze
-- Get detailed AI analysis including:
-  - Problem the tutorial solves
-  - Technical requirements
-  - Step-by-step breakdown
-  - Potential challenges
-  - Target audience
-- View video metadata and hashtags
-- Clean, modern interface with proper formatting
-- Mobile-friendly design
+### Current Features (v0.3.0)
+- Generate AI summaries of TikTok videos based on metadata
+- Support for both normal and experimental test modes
+- Easy-to-use interface for pasting TikTok URLs
+- Display of video metadata including:
+  - Author information
+  - Video description
+  - Hashtags
+  - Video ID
+  - Thumbnail preview
+- Toggle between normal and test modes for different analysis approaches
 
-## Tech Stack
+### Normal Mode
+- Provides structured analysis based on video metadata
+- Attempts to infer video content from available information
+- Formats response with clear sections and bullet points
 
-- **Frontend:**
-  - React
-  - Vite
-  - Axios for API calls
+### Test Mode (Experimental)
+- Alternative analysis approach
+- More explicit about limitations
+- Useful for testing new prompt strategies
+- Clearly indicates when content can't be directly accessed
 
-- **Backend:**
-  - Node.js
-  - Express
-  - TikTok oEmbed API
+## Coming Soon
+- Direct video content analysis
+- Audio transcription
+- Visual frame analysis
+- Subtitle extraction
+- Enhanced AI understanding of video content
 
-## Setup
+## Installation & Setup
 
 1. Clone the repository:
 
@@ -84,48 +91,12 @@ npm run dev
 ## Usage
 
 1. Paste a TikTok video URL into the input field
-2. Click "Get Summary"
-3. View the extracted video information
+2. Choose between Normal or Test mode using the toggle
+3. Click "Get Summary" or "Get Test Summary"
+4. View the AI-generated analysis of the video
 
-## Coming Soon
-
-- Instagram support
-
-- More detailed video analytics
-
-## Technologies Used
-
-- Frontend:
-  - React 18
-  - Vite
-  - Modern CSS with inline styles
-  - Responsive design
-
-- Backend:
-  - Node.js
-  - Express
-  - Axios for API requests
-
-- AI Integration:
-  - Deepseek API for content analysis
-  - Structured response formatting
-  - Markdown parsing and cleanup
-
-## Recent Updates
-
-- Added AI-powered video analysis
-- Improved response formatting
-- Enhanced UI with better readability
-- Added loading states
-- Fixed text selection visibility
-- Cleaned up markdown formatting
-- Optimized for longer responses
-
-## Development
-
-The application is structured as a full-stack JavaScript application:
-
-- `/client` - React frontend
-- `/server` - Express backend
-- Environment variables for API key management
-- Error handling and loading states
+## Technical Details
+- Frontend: React with TypeScript
+- Backend: Node.js/Express
+- AI: DeepSeek API for content analysis
+- TikTok: oEmbed API for metadata extraction
