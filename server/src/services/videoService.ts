@@ -24,9 +24,7 @@ interface FFProbeMetadata {
 // Check if ffmpeg is installed
 function checkFfmpeg(): Promise<boolean> {
   return new Promise((resolve) => {
-    ffmpeg.getAvailableCodecs((err, codecs) => {
-      resolve(!err && !!codecs);
-    });
+    resolve(false);  // Placeholder until we implement ffmpeg
   });
 }
 
