@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import summariesRoutes from './routes/summaries';
+import testSummariesRouter from './routes/testSummaries';
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +19,7 @@ app.get('/test', (req, res) => {
 
 // Routes
 app.use('/api', summariesRoutes);
+app.use('/api', testSummariesRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
