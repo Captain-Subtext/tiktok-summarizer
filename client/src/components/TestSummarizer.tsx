@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { LoadingIndicator } from './LoadingIndicator';
+import { extractAndValidateTikTokId } from '../utils/tiktok';
+import { TikTokEmbed } from './TikTokEmbed';
 
 interface SummaryResult {
   author: {
@@ -13,11 +15,18 @@ interface SummaryResult {
   thumbnail?: string;
 }
 
+interface TestResult {
+  summary: string;
+  sentiment: string;
+  keywords: string[];
+}
+
 export const TestSummarizer = () => {
   const [url, setUrl] = useState('');
   const [result, setResult] = useState<SummaryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isProcessingDetailed, setIsProcessingDetailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,13 +34,24 @@ export const TestSummarizer = () => {
     setError(null);
     setResult(null);
 
+    // First validate the TikTok URL
+    const validation = extractAndValidateTikTokId(url);
+    if (!validation.videoId) {
+      setError(validation.error || 'Invalid TikTok URL');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:3000/api/test-summary', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ 
+          url,
+          videoId: validation.videoId  // Pass validated ID to backend
+        })
       });
 
       if (!response.ok) {
@@ -44,6 +64,7 @@ export const TestSummarizer = () => {
       }
       
       setResult(data.data);
+      setIsProcessingDetailed(true);
     } catch (err) {
       console.error('Error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -131,6 +152,24 @@ export const TestSummarizer = () => {
           marginTop: '20px',
           color: '#000000'
         }}>
+          {isProcessingDetailed && (
+            <div style={{
+              marginBottom: '20px',
+              padding: '15px',
+              backgroundColor: '#f0f7ff',
+              borderRadius: '8px',
+              border: '1px solid #cce3ff',
+              color: '#000000'
+            }}>
+              <p style={{ fontSize: '14px', margin: 0 }}>
+                We're now working on a detailed summary by analyzing the full video content.
+                We'll email you when the enhanced analysis is complete.
+              </p>
+            </div>
+          )}
+
+          <TikTokEmbed videoId={result.videoId} />
+
           <div style={{ marginBottom: '10px' }}>
             <strong>Author:</strong> {result.author.name}
           </div>
