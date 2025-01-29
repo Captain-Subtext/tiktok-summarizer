@@ -4,7 +4,7 @@ A tool that uses AI to generate summaries of TikTok videos.
 
 ## Features
 
-### Current Features (v0.3.0)
+### Current Features (v0.4.1)
 - Generate AI summaries of TikTok videos based on metadata
 - Support for both normal and experimental test modes
 - Easy-to-use interface for pasting TikTok URLs
@@ -14,7 +14,10 @@ A tool that uses AI to generate summaries of TikTok videos.
   - Hashtags
   - Video ID
   - Thumbnail preview
-- Toggle between normal and test modes for different analysis approaches
+- Improved error handling and feedback
+- Click-to-play video embeds
+- Retry functionality for failed requests
+- Enhanced loading states and progress indicators
 
 ### Normal Mode
 - Provides structured analysis based on video metadata
@@ -26,13 +29,15 @@ A tool that uses AI to generate summaries of TikTok videos.
 - More explicit about limitations
 - Useful for testing new prompt strategies
 - Clearly indicates when content can't be directly accessed
+- Queues videos for detailed analysis
 
-## Coming Soon
-- Direct video content analysis
+## Coming Soon (v0.5.0)
+- Test dashboard for monitoring analysis progress
+- Queue status visualization
+- Detailed analysis tracking
+- Enhanced video content analysis
 - Audio transcription
 - Visual frame analysis
-- Subtitle extraction
-- Enhanced AI understanding of video content
 
 ## Installation & Setup
 

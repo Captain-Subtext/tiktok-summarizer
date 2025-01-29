@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LoadingIndicator } from './LoadingIndicator';
 import { extractAndValidateTikTokId } from '../utils/tiktok';
 import { TikTokEmbed } from './TikTokEmbed';
+import type { TestOutput } from '../types/TestOutput';
 
 interface SummaryResult {
   author: {
@@ -15,17 +16,17 @@ interface SummaryResult {
   thumbnail?: string;
 }
 
-interface TestResult {
-  summary: string;
-  sentiment: string;
-  keywords: string[];
+// Add new interface for error states
+interface ErrorState {
+  message: string;
+  isRetryable: boolean;
 }
 
 export const TestSummarizer = () => {
   const [url, setUrl] = useState('');
   const [result, setResult] = useState<SummaryResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorState | null>(null);
   const [isProcessingDetailed, setIsProcessingDetailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,10 +35,12 @@ export const TestSummarizer = () => {
     setError(null);
     setResult(null);
 
-    // First validate the TikTok URL
     const validation = extractAndValidateTikTokId(url);
     if (!validation.videoId) {
-      setError(validation.error || 'Invalid TikTok URL');
+      setError({ 
+        message: validation.error || 'Invalid TikTok URL',
+        isRetryable: false 
+      });
       setLoading(false);
       return;
     }
@@ -50,27 +53,51 @@ export const TestSummarizer = () => {
         },
         body: JSON.stringify({ 
           url,
-          videoId: validation.videoId  // Pass validated ID to backend
+          videoId: validation.videoId
         })
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
       if (data.status === 'error') {
         throw new Error(data.message);
+      }
+
+      // Check if we got an error message back from the AI service
+      if (data.data.aiSummary?.startsWith('Error:')) {
+        setError({
+          message: data.data.aiSummary,
+          isRetryable: true
+        });
+        return;
       }
       
       setResult(data.data);
       setIsProcessingDetailed(true);
     } catch (err) {
       console.error('Error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError({
+        message: err instanceof Error ? err.message : 'An error occurred',
+        isRetryable: true
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    setLoading(false);
+    setError(null);
+    // Clear any pending state
+    setResult(null);
+    setIsProcessingDetailed(false);
+    
+    // Force reload to clear any pending requests
+    window.location.reload();
   };
 
   return (
@@ -130,7 +157,7 @@ export const TestSummarizer = () => {
         </button>
       </form>
 
-      {loading && <LoadingIndicator onCancel={() => setLoading(false)} />}
+      {loading && <LoadingIndicator onCancel={handleCancel} />}
 
       {error && (
         <div style={{
@@ -140,11 +167,27 @@ export const TestSummarizer = () => {
           borderRadius: '8px',
           color: '#c62828'
         }}>
-          {error}
+          <div style={{ marginBottom: '10px' }}>{error.message}</div>
+          {error.isRetryable && (
+            <button
+              onClick={handleSubmit}
+              style={{
+                backgroundColor: '#007AFF',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Try Again
+            </button>
+          )}
         </div>
       )}
 
-      {result && !loading && (
+      {result && !loading && !error && (
         <div style={{
           backgroundColor: '#f5f5f5',
           padding: '20px',
@@ -178,7 +221,7 @@ export const TestSummarizer = () => {
             <strong>Description:</strong> {result.description}
           </div>
           
-          {result.aiSummary && result.aiSummary !== result.description && (
+          {result.aiSummary && !result.aiSummary.startsWith('Error:') && (
             <div style={{ 
               marginBottom: '15px',
               padding: '15px',
@@ -199,60 +242,7 @@ export const TestSummarizer = () => {
                 maxHeight: '600px',
                 overflowY: 'auto'
               }}>
-                {result.aiSummary.split('\n').map((line, index) => {
-                  const cleanLine = line
-                    .replace(/^###\s*/, '')
-                    .replace(/####\s*\*\*/g, '')
-                    .replace(/\*\*/g, '')
-                    .replace(/^\d\.\s/, '')
-                    .replace(/^#+ /, '')
-                    .trim();
-
-                  if (!cleanLine) return null;
-
-                  if (line.includes('What are') || line.includes('Comprehensive Analysis')) {
-                    return (
-                      <h3 key={index} style={{
-                        fontSize: '15px',
-                        fontWeight: 'bold',
-                        marginTop: '15px',
-                        marginBottom: '8px',
-                        color: '#0066cc'
-                      }}>
-                        {cleanLine}
-                      </h3>
-                    );
-                  } else if (line.trim().startsWith('-')) {
-                    return (
-                      <div key={index} style={{
-                        marginLeft: '15px',
-                        marginBottom: '4px',
-                        display: 'flex',
-                        alignItems: 'flex-start'
-                      }}>
-                        <span style={{ marginRight: '8px' }}>•</span>
-                        <span>{cleanLine.substring(1).trim()}</span>
-                      </div>
-                    );
-                  } else if (line.trim().match(/^\d+\./)) {
-                    return (
-                      <div key={index} style={{
-                        marginLeft: '15px',
-                        marginBottom: '4px',
-                        paddingLeft: '8px'
-                      }}>
-                        {cleanLine}
-                      </div>
-                    );
-                  }
-                  return (
-                    <p key={index} style={{
-                      margin: '4px 0'
-                    }}>
-                      {cleanLine}
-                    </p>
-                  );
-                })}
+                {result.aiSummary}
               </div>
             </div>
           )}
@@ -304,4 +294,4 @@ export const TestSummarizer = () => {
       )}
     </div>
   );
-}; 
+};
