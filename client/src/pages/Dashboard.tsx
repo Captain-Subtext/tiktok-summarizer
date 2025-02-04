@@ -61,7 +61,6 @@ export const Dashboard = () => {
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
       
       if (data.status === 'error') {
         throw new Error(data.message);
@@ -69,7 +68,6 @@ export const Dashboard = () => {
       
       setResult(data.data);
     } catch (err) {
-      console.error('Error:', err);
       if (err instanceof Error && err.name === 'AbortError') {
         setError('Request cancelled');
       } else {

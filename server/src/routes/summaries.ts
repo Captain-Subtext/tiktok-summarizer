@@ -1,47 +1,31 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import { AppRequestHandler, AppError } from '../types/express';
 import { fetchTikTokData } from '../services/tiktokService';
 import { generateAISummary } from '../services/aiService';
+import { z } from 'zod';
 
 const router = express.Router();
 
-router.post('/summary', async (req: Request<any, any, { url: string }>, res: Response) => {
-  try {
-    console.log('POST /api/summary received');
-    console.log('Request body:', req.body);
-    const { url } = req.body;
-    console.log('Processing URL:', url);
-
-    if (!url) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'No URL provided'
-      });
-    }
-
-    console.log('Fetching TikTok data...');
-    const videoData = await fetchTikTokData(url);
-    console.log('TikTok data:', videoData);
-
-    console.log('Generating AI summary...');
-    const aiSummary = await generateAISummary(videoData);
-    console.log('AI summary generated');
-
-    res.json({
-      status: 'success',
-      data: {
-        ...videoData,
-        aiSummary
-      }
-    });
-
-  } catch (error) {
-    console.error('Error details:', error);
-    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
-    res.status(500).json({
-      status: 'error',
-      message: error instanceof Error ? error.message : 'Server error processing request'
-    });
-  }
+// Request validation schema
+const SummaryRequestSchema = z.object({
+  url: z.string().url('Invalid TikTok URL')
 });
+
+const createSummary: AppRequestHandler = async (req, res, next) => {
+  try {
+    const { url } = SummaryRequestSchema.parse(req.body);
+    const videoData = await fetchTikTokData(url);
+    const aiSummary = await generateAISummary(videoData);
+
+    res.sendSuccess({
+      ...videoData,
+      aiSummary
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+router.post('/summary', createSummary);
 
 export default router; 

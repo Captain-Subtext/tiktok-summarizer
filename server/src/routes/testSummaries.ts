@@ -1,49 +1,141 @@
 import express from 'express';
+import { AppRequestHandler, AppError } from '../types/express';
 import { fetchTikTokData } from '../services/tiktokService';
 import { generateTestAISummary } from '../services/testAiService';
+import { prisma } from '../lib/db';
+import { z } from 'zod';
 
 const router = express.Router();
+
+// Request validation schemas
+const SummaryRequestSchema = z.object({
+  url: z.string().url('Invalid TikTok URL')
+});
+
+const TestSummarySchema = z.object({
+  videoId: z.string().min(1),
+  text: z.string().min(1)
+});
 
 router.get('/test/ping', (req, res) => {
   console.log('Test ping received');
   res.json({ status: 'ok', message: 'Test router working' });
 });
 
-router.post('/test-summary', async (req, res) => {
-  console.log('POST /api/test-summary received');
-  console.log('Request body:', req.body);
+const processTestSummary: AppRequestHandler = async (req, res, next) => {
   try {
-    const { url } = req.body;
-    if (!url) {
-      console.log('Error: No URL provided');
-      return res.status(400).json({
-        status: 'error',
-        message: 'No URL provided'
-      });
-    }
-
-    console.log('Fetching TikTok data for:', url);
+    const { url } = SummaryRequestSchema.parse(req.body);
+    
     const videoData = await fetchTikTokData(url);
-    console.log('TikTok data received:', videoData);
 
-    console.log('Generating test AI summary...');
     const aiSummary = await generateTestAISummary(videoData);
-    console.log('AI summary generated');
 
-    res.json({
-      status: 'success',
-      data: {
-        ...videoData,
-        aiSummary
-      }
+    // Save to database
+    const savedData = await prisma.$transaction(async (tx) => {
+      // Create or find author
+      const author = await tx.testAuthor.upsert({
+        where: { url: videoData.author.url },
+        update: {},
+        create: {
+          name: videoData.author.name,
+          url: videoData.author.url
+        }
+      });
+
+      // Create or update video
+      const video = await tx.testVideo.upsert({
+        where: { videoId: videoData.videoId },
+        update: {
+          description: videoData.description,
+          hashtags: videoData.hashtags,
+          thumbnail: videoData.thumbnail,
+          status: 'processing'
+        },
+        create: {
+          videoId: videoData.videoId,
+          authorId: author.id,
+          description: videoData.description,
+          hashtags: videoData.hashtags,
+          thumbnail: videoData.thumbnail,
+          status: 'processing'
+        }
+      });
+
+      // Create or update analysis
+      const analysis = await tx.testAnalysis.upsert({
+        where: { videoId: video.videoId },
+        update: {
+          summary: aiSummary
+        },
+        create: {
+          videoId: video.videoId,
+          summary: aiSummary
+        }
+      });
+
+      return { video, analysis, author };
+    });
+
+    res.sendSuccess({
+      ...videoData,
+      aiSummary,
+      status: 'processing'
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      const appError: AppError = new Error('Invalid request data');
+      appError.statusCode = 400;
+      appError.status = 'validation_error';
+      next(appError);
+      return;
+    }
+
     console.error('Error in test summary route:', error);
-    res.status(500).json({
-      status: 'error',
-      message: error instanceof Error ? error.message : 'Server error'
-    });
+    const appError: AppError = new Error(
+      error instanceof Error ? error.message : 'Failed to process video'
+    );
+    appError.statusCode = 500;
+    next(appError);
   }
+};
+
+const createTestSummary: AppRequestHandler = async (req, res, next) => {
+  try {
+    const { videoId, text } = TestSummarySchema.parse(req.body);
+    
+    const video = await prisma.testVideo.update({
+      where: { id: videoId },
+      data: {
+        analysis: {
+          create: {
+            summary: text
+          }
+        }
+      },
+      include: {
+        analysis: true
+      }
+    });
+
+    res.sendSuccess(video);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const appError: AppError = new Error('Invalid input data');
+      appError.statusCode = 400;
+      appError.status = 'validation_error';
+      next(appError);
+      return;
+    }
+    next(error);
+  }
+};
+
+// Use different paths for different operations
+router.post('/test-summary', (req, res, next) => {
+  console.log('POST /test-summary received:', req.body);
+  processTestSummary(req, res, next);
 });
+
+router.post('/test-summary/create', createTestSummary);
 
 export default router; 

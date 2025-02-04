@@ -3,6 +3,7 @@ import { LoadingIndicator } from './LoadingIndicator';
 import { extractAndValidateTikTokId } from '../utils/tiktok';
 import { TikTokEmbed } from './TikTokEmbed';
 import type { TestOutput } from '../types/TestOutput';
+import { Link } from 'react-router-dom';
 
 interface SummaryResult {
   author: {
@@ -79,7 +80,6 @@ export const TestSummarizer = () => {
       setResult(data.data);
       setIsProcessingDetailed(true);
     } catch (err) {
-      console.error('Error:', err);
       setError({
         message: err instanceof Error ? err.message : 'An error occurred',
         isRetryable: true
@@ -204,10 +204,24 @@ export const TestSummarizer = () => {
               border: '1px solid #cce3ff',
               color: '#000000'
             }}>
-              <p style={{ fontSize: '14px', margin: 0 }}>
+              <p style={{ fontSize: '14px', margin: '0 0 10px 0' }}>
                 We're now working on a detailed summary by analyzing the full video content.
                 We'll email you when the enhanced analysis is complete.
               </p>
+              <Link 
+                to="/test-dashboard"
+                style={{
+                  display: 'inline-block',
+                  padding: '8px 16px',
+                  backgroundColor: '#007AFF',
+                  color: 'white',
+                  borderRadius: '4px',
+                  textDecoration: 'none',
+                  fontSize: '14px'
+                }}
+              >
+                View Test Dashboard →
+              </Link>
             </div>
           )}
 

@@ -32,3 +32,33 @@ model Summary {
   @@index([userId])
   @@index([anonymousId])
 }
+
+model TestVideo {
+  id          String      @id @default(uuid())
+  videoId     String      @unique
+  status      String      @default("processing") // processing, completed, failed
+  author      TestAuthor  @relation(fields: [authorId], references: [id])
+  authorId    String
+  description String
+  hashtags    String[]
+  thumbnail   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  analysis    TestAnalysis?
+}
+
+model TestAuthor {
+  id      String      @id @default(uuid())
+  name    String
+  url     String      @unique
+  videos  TestVideo[]
+}
+
+model TestAnalysis {
+  id          String    @id @default(uuid())
+  videoId     String    @unique
+  video       TestVideo @relation(fields: [videoId], references: [videoId])
+  summary     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
