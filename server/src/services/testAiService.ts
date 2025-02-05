@@ -5,8 +5,11 @@ export async function generateTestAISummary(videoData: any): Promise<string> {
     // First verify we have an API key
     if (!process.env.DEEPSEEK_API_KEY) {
       console.error('Missing DeepSeek API key');
-      return 'Error: API configuration issue';
+      throw new Error('API configuration error');
     }
+
+    // Log the start of processing
+    console.log('Starting AI summary generation for:', videoData.videoId);
 
     const prompt = `Summarize this TikTok video based on its metadata:
 
@@ -17,8 +20,6 @@ Tags: ${videoData.hashtags.join(' ')}
 
 Please provide a concise summary of the video's likely content and purpose.`;
 
-    console.log('Sending request to DeepSeek API...');
-    
     const response = await axios.post(
       'https://api.deepseek.com/v1/chat/completions',
       {
@@ -27,7 +28,7 @@ Please provide a concise summary of the video's likely content and purpose.`;
           role: "user",
           content: prompt
         }],
-        max_tokens: 500,  // Reduced for faster response
+        max_tokens: 500,
         temperature: 0.3
       },
       {
@@ -35,38 +36,38 @@ Please provide a concise summary of the video's likely content and purpose.`;
           'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        timeout: 10000  // 10 second timeout
+        timeout: 30000  // Increased to 30 seconds
       }
     );
 
-    console.log('DeepSeek API raw response:', response.data);
+    // Log successful response
+    console.log('DeepSeek API response received for:', videoData.videoId);
 
-    // More detailed response checking
-    if (!response.data) {
-      console.error('Empty response from API');
-      return 'Error: No response from AI service';
-    }
-
-    if (!response.data.choices?.[0]?.message?.content) {
-      console.error('Malformed API response:', response.data);
-      return `Summary based on metadata:
-- Topic: ${videoData.description}
-- Creator: ${videoData.author.name}
-- Key themes: ${videoData.hashtags.join(', ')}`;
+    if (!response.data?.choices?.[0]?.message?.content) {
+      console.error('Invalid API response format:', response.data);
+      throw new Error('Invalid AI response format');
     }
 
     return response.data.choices[0].message.content;
+
   } catch (error) {
-    console.error('DeepSeek API error:', error);
+    // Enhanced error logging
+    console.error('DeepSeek API error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      response: error.response?.data
+    });
+
     if (axios.isAxiosError(error)) {
-      if (error.code === 'ECONNABORTED') {
-        return 'Error: Request timed out. Please try again.';
+      if (error.code === 'ECONNRESET') {
+        throw new Error('Connection to AI service was reset. Please try again.');
       }
-      console.error('API Error Details:', {
-        status: error.response?.status,
-        data: error.response?.data
-      });
+      if (error.response?.status === 429) {
+        throw new Error('AI service is busy. Please try again in a moment.');
+      }
     }
-    return 'Error generating summary. Please try again.';
+
+    throw new Error('Could not generate AI summary. Please try again.');
   }
 } 
