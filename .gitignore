@@ -35,3 +35,6 @@ yarn-error.log*
 # Test output files
 test_output/*
 !test_output/.gitkeep
+
+# Database
+*.sql
