@@ -81,10 +81,10 @@ const getTestVideoById: AppRequestHandler = async (req, res, next) => {
     res.sendSuccess({
       videoId: video.videoId,
       status: video.status,
-      author: {
-        name: video.author.name,
-        url: video.author.url
-      },
+      author: video.author ? {
+        name: video.author?.name || '',
+        url: video.author?.url || ''
+      } : null,
       description: video.description,
       hashtags: video.hashtags,
       thumbnail: video.thumbnail,

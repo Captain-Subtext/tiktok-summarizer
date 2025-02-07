@@ -1,32 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
-  resetToken String?    @unique
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  createdAt        DateTime  @default(now())
+  resetToken       String?   @unique
   resetTokenExpiry DateTime?
-  summaries Summary[]
+  summaries        Summary[]
 }
 
 model Summary {
   id          String    @id @default(uuid())
   videoId     String
-  summaryText String    @db.Text
+  summaryText String
   userId      String?
-  user        User?     @relation(fields: [userId], references: [id])
   anonymousId String?
   createdAt   DateTime  @default(now())
   expiresAt   DateTime?
   isCached    Boolean   @default(false)
+  user        User?     @relation(fields: [userId], references: [id])
 
   @@index([videoId])
   @@index([userId])
@@ -34,31 +34,57 @@ model Summary {
 }
 
 model TestVideo {
-  id          String      @id @default(uuid())
-  videoId     String      @unique
-  status      String      @default("processing") // processing, completed, failed
-  author      TestAuthor  @relation(fields: [authorId], references: [id])
-  authorId    String
-  description String
-  hashtags    String[]
-  thumbnail   String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  analysis    TestAnalysis?
-}
-
-model TestAuthor {
-  id      String      @id @default(uuid())
-  name    String
-  url     String      @unique
-  videos  TestVideo[]
+  videoId       String           @unique
+  description   String
+  hashtags      String[]
+  thumbnail     String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  archivedAt    DateTime?
+  completedAt   DateTime?
+  currentStage  ProcessingStage?
+  deleteAfter   DateTime?
+  failureReason String?
+  isArchived    Boolean          @default(false)
+  lastActivity  DateTime?        @updatedAt
+  retryCount    Int              @default(0)
+  startedAt     DateTime?
+  id            Int              @id @default(autoincrement())
+  authorId      Int?
+  status        String           @default("processing")
+  stalledAt     DateTime?
+  analysis      TestAnalysis?
+  author        TestAuthor?      @relation(fields: [authorId], references: [id])
 }
 
 model TestAnalysis {
-  id          String    @id @default(uuid())
-  videoId     String    @unique
-  video       TestVideo @relation(fields: [videoId], references: [videoId])
-  summary     String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id      String    @id @default(uuid())
+  videoId String    @unique
+  summary String
+  video   TestVideo @relation(fields: [videoId], references: [videoId])
+}
+
+model TestAuthor {
+  name   String
+  url    String      @unique
+  id     Int         @id @default(autoincrement())
+  videos TestVideo[]
+}
+
+enum VideoStatus {
+  QUEUED
+  PROCESSING
+  STALLED
+  FAILED
+  COMPLETED
+  ARCHIVED
+  DELETED
+}
+
+enum ProcessingStage {
+  DOWNLOAD
+  EXTRACT
+  TRANSCRIBE
+  ANALYZE
+  SUMMARIZE
 }

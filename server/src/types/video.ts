@@ -14,4 +14,21 @@ export const VideoParamsSchema = z.object({
 
 export type VideoStatus = z.infer<typeof VideoStatusSchema>;
 export type VideoQuery = z.infer<typeof VideoQuerySchema>;
-export type VideoParams = z.infer<typeof VideoParamsSchema>; 
+export type VideoParams = z.infer<typeof VideoParamsSchema>;
+
+export interface TestVideo {
+  id: number;
+  videoId: string;
+  status: VideoStatus;
+  author?: {
+    name: string;
+    url: string;
+  };
+  description: string;
+  hashtags: string[];
+  thumbnail: string | null;
+  createdAt: Date;
+  analysis?: {
+    summary: string;
+  };
+} 
