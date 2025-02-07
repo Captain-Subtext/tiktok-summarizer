@@ -4,6 +4,7 @@ import { fetchTikTokData } from '../services/tiktokService';
 import { generateTestAISummary } from '../services/testAiService';
 import { prisma } from '../lib/db';
 import { z } from 'zod';
+import { VideoStatusSchema } from '../types/video';
 
 const router = express.Router();
 
@@ -49,7 +50,8 @@ const processTestSummary: AppRequestHandler = async (req, res, next) => {
           description: videoData.description,
           hashtags: videoData.hashtags,
           thumbnail: videoData.thumbnail,
-          status: 'processing'
+          status: 'processing',
+          startedAt: new Date()
         },
         create: {
           videoId: videoData.videoId,
@@ -57,7 +59,8 @@ const processTestSummary: AppRequestHandler = async (req, res, next) => {
           description: videoData.description,
           hashtags: videoData.hashtags,
           thumbnail: videoData.thumbnail,
-          status: 'processing'
+          status: 'processing',
+          startedAt: new Date()
         }
       });
 
@@ -66,6 +69,7 @@ const processTestSummary: AppRequestHandler = async (req, res, next) => {
         where: { videoId: video.videoId },
         data: {
           status: 'completed',
+          completedAt: new Date(),
           analysis: {
             create: {
               summary: aiSummary
@@ -84,7 +88,7 @@ const processTestSummary: AppRequestHandler = async (req, res, next) => {
     res.sendSuccess({
       ...savedData.updatedVideo,
       aiSummary,
-      status: 'COMPLETED'
+      status: savedData.updatedVideo.status
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -116,7 +120,8 @@ const createTestSummary: AppRequestHandler = async (req, res, next) => {
             summary: text
           }
         },
-        status: 'completed'
+        status: 'completed',
+        completedAt: new Date()
       },
       include: {
         author: true,

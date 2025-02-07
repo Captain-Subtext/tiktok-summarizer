@@ -1,8 +1,15 @@
 // Processing stages for detailed analysis
 export type ProcessingStage = 'pending' | 'processing' | 'completed' | 'failed';
 
-// Overall video status
-export type VideoStatus = 'queued' | 'processing' | 'completed' | 'failed';
+// Video processing status
+export type VideoStatus = 
+  | 'queued'      // Initial state
+  | 'processing'  // Currently being worked on
+  | 'stalled'     // No progress for >5 mins
+  | 'failed'      // Error occurred
+  | 'completed'   // Successfully processed
+  | 'archived'    // User archived
+  | 'deleted';    // Marked for deletion
 
 // Processing stages tracking
 export interface ProcessingStages {
@@ -27,6 +34,11 @@ export interface TestVideo {
   stages: ProcessingStages;
   createdAt: string;
   updatedAt: string;
+  startedAt?: string;      // When processing began
+  stalledAt?: string;      // When detected as stalled
+  completedAt?: string;    // When processing completed
+  archivedAt?: string;     // When user archived
+  deleteAfter?: string;    // When to auto-delete
   author: VideoAuthor;
   description: string;
   hashtags: string[];

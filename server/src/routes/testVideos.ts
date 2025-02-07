@@ -1,6 +1,6 @@
 import express from 'express';
 import { prisma } from '../lib/db';
-import { VideoQuerySchema, VideoParamsSchema } from '../types/video';
+import { VideoQuerySchema, VideoParamsSchema, VideoStatusSchema } from '../types/video';
 import { z } from 'zod';
 import { AppRequestHandler, AppError } from '../types/express';
 
@@ -11,7 +11,7 @@ const router = express.Router();
  * Retrieves a list of test videos, optionally filtered by status
  * 
  * Query Parameters:
- * @param {string} [status] - Filter videos by status ('processing', 'completed', 'failed')
+ * @param {string} [status] - Filter videos by status (queued, processing, stalled, etc.)
  * 
  * @returns {Promise<Array<TestVideo>>} List of test videos
  * @throws {400} Invalid query parameters
@@ -23,7 +23,10 @@ const getTestVideos: AppRequestHandler = async (req, res, next) => {
     
     const videos = await prisma.testVideo.findMany({
       where: query.status ? {
-        status: query.status
+        status: query.status,
+        NOT: {
+          status: 'deleted'
+        }
       } : undefined,
       orderBy: {
         createdAt: 'desc'

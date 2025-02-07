@@ -4,6 +4,7 @@ import { TEST_OUTPUT_CONFIG } from '../config/testOutput';
 import fs from 'fs/promises';
 import path from 'path';
 import { z } from 'zod';
+import { VideoStatusSchema } from '../types/video';
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.get('/test-queue/status/:videoId', async (req: AppRequest, res: AppRespon
     const { videoId } = VideoIdSchema.parse(req.params);
     
     // Check each directory for the video
-    for (const status of ['queue', 'processing', 'completed', 'failed']) {
+    for (const status of VideoStatusSchema.options) {
       const filePath = path.join(
         TEST_OUTPUT_CONFIG.PATHS[status.toUpperCase()], 
         `${videoId}.json`
