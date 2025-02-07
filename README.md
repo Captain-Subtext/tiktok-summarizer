@@ -269,3 +269,99 @@ npx prisma generate       # Generates Prisma Client
 2. Choose between Normal or Test mode using the toggle
 3. Click "Get Summary" or "Get Test Summary"
 4. View the AI-generated analysis of the video
+
+## API Documentation
+
+### Test Video Endpoints
+
+#### List Videos
+```http
+GET /api/test-videos
+```
+
+Query Parameters:
+- `status` (optional): Filter by status ('processing', 'completed', 'failed')
+- `page` (optional): Page number (default: 1)
+- `pageSize` (optional): Items per page (default: 10, max: 100)
+
+Response:
+```json
+{
+  "videos": [{
+    "videoId": string,
+    "status": "processing" | "completed" | "failed",
+    "author": {
+      "name": string,
+      "url": string
+    },
+    "description": string,
+    "hashtags": string[],
+    "thumbnail": string,
+    "createdAt": string,
+    "startedAt": string | null,
+    "stalledAt": string | null,
+    "failureReason": string | null,
+    "lastActivity": string | null,
+    "deleteAfter": string | null,
+    "aiSummary": string | null
+  }],
+  "total": number,
+  "page": number,
+  "pageSize": number
+}
+```
+
+#### Get Video
+```http
+GET /api/test-videos/:videoId
+```
+
+Response: Single video object (same structure as above)
+
+#### Update Video Status
+```http
+PATCH /api/test-videos/:videoId/status
+```
+
+Request Body:
+```json
+{
+  "status": "processing" | "completed" | "failed",
+  "failureReason": string | null // Required if status is 'failed'
+}
+```
+
+Response: Updated video object
+
+#### Retry Failed Video
+```http
+POST /api/test-videos/:videoId/retry
+```
+
+Response: Updated video object
+
+#### Archive Video
+```http
+POST /api/test-videos/:videoId/archive
+```
+
+Query Parameters:
+- `deleteAfter` (optional): ISO8601 date string for auto-deletion
+
+Response: Updated video object
+
+### Error Responses
+All endpoints may return these error responses:
+
+```json
+{
+  "status": "error",
+  "message": string,
+  "code": number
+}
+```
+
+Common Status Codes:
+- 400: Bad Request (invalid parameters)
+- 404: Not Found
+- 500: Server Error
