@@ -37,14 +37,16 @@ export function SelectionControls({ allVideoIds, onDelete }: SelectionControlsPr
 
   const handleDelete = async () => {
     try {
-      // Temporarily log instead of making API call
-      console.log('Would delete:', Array.from(selectedIds));
+      await apiClient('TEST_VIDEOS', {
+        method: 'DELETE',
+        body: { videoIds: Array.from(selectedIds) }
+      });
       
-      // For now, just clear selection
       unselectAll();
-      onDelete?.();
+      onDelete?.(); // Refresh the video list
     } catch (error) {
       console.error('Failed to delete videos:', error);
+      // TODO: Add error toast notification
     }
   };
 
@@ -80,13 +82,13 @@ export function SelectionControls({ allVideoIds, onDelete }: SelectionControlsPr
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription className="space-y-2">
-                  <p>
+                  <span className="block">
                     This will permanently delete {selectedIds.size === 1 
                       ? 'this video' 
                       : `these ${selectedIds.size} videos`
                     }.
-                  </p>
-                  <p>This action cannot be undone.</p>
+                  </span>
+                  <span className="block">This action cannot be undone.</span>
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="sm:space-x-2">

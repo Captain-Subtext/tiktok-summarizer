@@ -97,8 +97,43 @@ const getTestVideoById: AppRequestHandler = async (req, res, next) => {
   }
 };
 
+const deleteTestVideos: AppRequestHandler = async (req, res, next) => {
+  try {
+    const { videoIds } = req.body;
+    
+    if (!Array.isArray(videoIds)) {
+      const error: AppError = new Error('videoIds must be an array');
+      error.statusCode = 400;
+      next(error);
+      return;
+    }
+
+    // Delete in a transaction to ensure consistency
+    await prisma.$transaction(async (tx) => {
+      // First delete the analysis records
+      await tx.testAnalysis.deleteMany({
+        where: {
+          videoId: { in: videoIds }
+        }
+      });
+
+      // Then delete the videos
+      await tx.testVideo.deleteMany({
+        where: {
+          videoId: { in: videoIds }
+        }
+      });
+    });
+
+    res.sendSuccess({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Routes
 router.get('/', getTestVideos);
 router.get('/:videoId', getTestVideoById);
+router.delete('/', deleteTestVideos);
 
 export default router; 
