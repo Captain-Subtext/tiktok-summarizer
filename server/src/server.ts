@@ -37,7 +37,7 @@ app.use(responseMiddleware);
 app.use(loggingMiddleware);
 
 // Routes
-app.use('/api', testVideosRouter);
+app.use('/api/test-videos', testVideosRouter);
 app.use('/api', summariesRoutes);
 app.use('/api', testSummariesRouter);
 

@@ -3,6 +3,7 @@ import { prisma } from '../lib/db';
 import { VideoQuerySchema, VideoParamsSchema } from '../types/video';
 import { z } from 'zod';
 import { AppRequestHandler, AppError } from '../types/express';
+import { Router } from 'express';
 
 const router = express.Router();
 
@@ -96,7 +97,8 @@ const getTestVideoById: AppRequestHandler = async (req, res, next) => {
   }
 };
 
-router.get('/test-videos', getTestVideos);
-router.get('/test-videos/:videoId', getTestVideoById);
+// Routes
+router.get('/', getTestVideos);
+router.get('/:videoId', getTestVideoById);
 
 export default router; 

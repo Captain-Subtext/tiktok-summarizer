@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { TestVideo } from '../../types/TestVideo';
 import { Badge } from "../ui/badge"
 import { Card, CardContent, CardFooter } from "../ui/card"
@@ -13,6 +13,7 @@ import {
 } from "../ui/dropdown-menu"
 import { MoreVertical } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { SelectableCard } from '../ui/selectable-card'
 
 interface TestVideoCardProps {
   video: TestVideo;
@@ -20,23 +21,31 @@ interface TestVideoCardProps {
   isSelected?: boolean;
 }
 
-export const TestVideoCard: React.FC<TestVideoCardProps> = ({ video, onSelect, isSelected }) => {
+export const TestVideoCard: React.FC<TestVideoCardProps> = ({ video, onSelect }) => {
+  const [searchParams] = useSearchParams();
+  const isListView = searchParams.get('layout') === 'list';
+
   return (
-    <Card className={cn(
-      "relative group overflow-hidden transition-all duration-200",
-      isSelected && "bg-blue-50 border border-blue-200"
-    )}>
-      <div className="absolute top-2 left-2 z-10">
-        <Checkbox 
-          checked={isSelected}
-          onCheckedChange={() => onSelect?.(video.videoId)}
-          onClick={(e) => e.stopPropagation()}
-        />
-      </div>
+    <SelectableCard id={video.videoId} onSelect={onSelect}>
       <Link to={`/test-dashboard/${video.videoId}`}>
-        <CardContent className="p-4 pt-10">
+        <CardContent className={cn(
+          "p-4 pt-10 relative",
+          isListView && "flex items-start gap-4"
+        )}>
+          {isListView && (
+            <div className="absolute top-2 right-2">
+              <Badge variant={video.status === 'processing' ? 'primary' : 'success'}>
+                {video.status}
+              </Badge>
+            </div>
+          )}
           {video.thumbnail && (
-            <div className="aspect-video w-full mb-4 rounded-md overflow-hidden">
+            <div className={cn(
+              "rounded-md overflow-hidden",
+              isListView 
+                ? "w-20 h-20 flex-shrink-0"
+                : "aspect-video w-full mb-4"
+            )}>
               <img 
                 src={video.thumbnail} 
                 alt={video.description}
@@ -44,15 +53,28 @@ export const TestVideoCard: React.FC<TestVideoCardProps> = ({ video, onSelect, i
               />
             </div>
           )}
-          <div className="absolute top-2 right-2">
-            <Badge variant={video.status === 'processing' ? 'primary' : 'success'}>
-              {video.status}
-            </Badge>
+          <div className={cn(
+            isListView && "flex-1 min-w-0 relative"
+          )}>
+            {!isListView && (
+              <div className="absolute top-[7px] right-2">
+                <Badge variant={video.status === 'processing' ? 'primary' : 'success'}>
+                  {video.status}
+                </Badge>
+              </div>
+            )}
+            <h3 className={cn(
+              "text-sm font-medium",
+              isListView && "line-clamp-2"
+            )}>
+              {video.description}
+            </h3>
+            <p className="text-sm text-muted-foreground truncate">
+              By: {video.author.name}
+            </p>
           </div>
-          <h3 className="text-sm font-medium">{video.description}</h3>
-          <p className="text-sm text-muted-foreground">By: {video.author.name}</p>
         </CardContent>
       </Link>
-    </Card>
+    </SelectableCard>
   );
 }; 

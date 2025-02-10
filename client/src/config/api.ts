@@ -1,9 +1,9 @@
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000/api',
+  BASE_URL: 'http://localhost:3000',
   ENDPOINTS: {
-    TEST_VIDEOS: '/test-videos',
-    TEST_SUMMARY_PROCESS: '/test-summary/process',
-    TEST_SUMMARY_CREATE: '/test-summary/create'
+    TEST_VIDEOS: '/api/test-videos',
+    TEST_SUMMARY_PROCESS: '/api/test-summary/process',
+    TEST_SUMMARY_CREATE: '/api/test-summary/create'
   }
 } as const;
 
