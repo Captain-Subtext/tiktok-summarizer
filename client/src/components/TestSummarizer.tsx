@@ -4,6 +4,8 @@ import { extractAndValidateTikTokId } from '../utils/tiktok';
 import { TikTokEmbed } from './TikTokEmbed';
 import type { TestOutput } from '../types/TestOutput';
 import { Link } from 'react-router-dom';
+import { apiClient } from '../utils/apiClient';
+import type { FrameExtractionResponse } from '../types/frame';
 
 interface SummaryResult {
   author: {
@@ -79,6 +81,20 @@ export const TestSummarizer = () => {
       
       setResult(data.data);
       setIsProcessingDetailed(true);
+
+      // Extract frames after successful summary
+      try {
+        await apiClient<FrameExtractionResponse>('FRAME_PROCESSING', {
+          method: 'POST',
+          body: { 
+            videoId: data.data.videoId, 
+            videoUrl: url 
+          }
+        });
+      } catch (frameError) {
+        console.error('Frame extraction failed:', frameError);
+        // Don't fail the whole process if frame extraction fails
+      }
     } catch (err) {
       setError({
         message: err instanceof Error ? err.message : 'An error occurred',

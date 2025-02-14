@@ -4,6 +4,7 @@ import cors from 'cors';
 import summariesRoutes from './routes/summaries';
 import testSummariesRouter from './routes/testSummaries';
 import testVideosRouter from './routes/testVideos';
+import frameProcessingRouter from './routes/frameProcessing';
 import { AppError, AppMiddlewareHandler, AppErrorHandler } from './types/express';
 import { responseMiddleware } from './middleware/response';
 
@@ -40,6 +41,7 @@ app.use(loggingMiddleware);
 app.use('/api/test-videos', testVideosRouter);
 app.use('/api', summariesRoutes);
 app.use('/api', testSummariesRouter);
+app.use('/api/frame-processing', frameProcessingRouter);
 
 // Error handler should be last
 app.use(errorHandler);

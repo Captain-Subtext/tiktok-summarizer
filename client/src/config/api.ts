@@ -3,7 +3,8 @@ export const API_CONFIG = {
   ENDPOINTS: {
     TEST_VIDEOS: '/api/test-videos',
     TEST_SUMMARY_PROCESS: '/api/test-summary/process',
-    TEST_SUMMARY_CREATE: '/api/test-summary/create'
+    TEST_SUMMARY_CREATE: '/api/test-summary/create',
+    FRAME_PROCESSING: '/api/frame-processing/extract'
   }
 } as const;
 

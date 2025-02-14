@@ -64,7 +64,7 @@ export const TestVideoCard: React.FC<TestVideoCardProps> = ({ video, onSelect })
               </div>
             )}
             <h3 className={cn(
-              "text-sm font-medium",
+              "text-sm font-medium line-clamp-4",
               isListView && "line-clamp-2"
             )}>
               {video.description}

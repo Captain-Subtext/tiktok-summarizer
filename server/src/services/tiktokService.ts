@@ -11,6 +11,7 @@ interface TikTokVideoData {
   thumbnail: string;
   embedHtml: string;
   url: string;
+  playUrl?: string;
 }
 
 export async function fetchTikTokData(url: string): Promise<TikTokVideoData> {
@@ -18,8 +19,8 @@ export async function fetchTikTokData(url: string): Promise<TikTokVideoData> {
     // Clean the URL by removing query parameters
     const cleanUrl = url.split('?')[0];
     
-    // Get video data from TikTok's oembed endpoint
-    const response = await axios.get(`https://www.tiktok.com/oembed?url=${cleanUrl}`, {
+    // First get metadata from oembed
+    const oembedResponse = await axios.get(`https://www.tiktok.com/oembed?url=${cleanUrl}`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)',
         'Accept': 'application/json',
@@ -27,14 +28,25 @@ export async function fetchTikTokData(url: string): Promise<TikTokVideoData> {
       }
     });
 
-    const embedData = response.data;
+    const embedData = oembedResponse.data;
 
-    // Extract hashtags and clean description from title
+    // Then get the actual page to extract video URL
+    const pageResponse = await axios.get(cleanUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)',
+        'Accept': 'text/html',
+        'Referer': 'https://www.tiktok.com/'
+      }
+    });
+
+    // Extract video URL from page HTML
+    const playUrlMatch = pageResponse.data.match(/"playAddr":"([^"]+)"/);
+    const playUrl = playUrlMatch ? playUrlMatch[1].replace(/\\u002F/g, '/') : undefined;
+
+    // Extract other data as before...
     const hashtags = (embedData.title?.match(/#\w+/g) || [])
       .map((tag: string) => tag.slice(1));
     const description = embedData.title?.replace(/#\w+/g, '').trim() || '';
-
-    // Extract video ID from URL
     const videoId = cleanUrl.split('/video/')[1];
 
     return {
@@ -47,7 +59,8 @@ export async function fetchTikTokData(url: string): Promise<TikTokVideoData> {
       hashtags,
       thumbnail: embedData.thumbnail_url,
       embedHtml: embedData.html,
-      url: cleanUrl
+      url: cleanUrl,
+      playUrl
     };
   } catch (error) {
     console.error('Error fetching TikTok data:', error);

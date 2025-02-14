@@ -67,8 +67,14 @@ const processTestSummary: AppRequestHandler = async (req, res, next) => {
         data: {
           status: 'completed',
           analysis: {
-            create: {
-              summary: aiSummary
+            upsert: {
+              create: {
+                summary: aiSummary,
+                frames: []
+              },
+              update: {
+                summary: aiSummary
+              }
             }
           }
         },

@@ -58,10 +58,11 @@ model TestVideo {
 }
 
 model TestAnalysis {
-  id      String    @id @default(uuid())
-  videoId String    @unique
-  summary String
-  video   TestVideo @relation(fields: [videoId], references: [videoId])
+  id        String    @id @default(uuid())
+  videoId   String    @unique
+  summary   String
+  frames    Json[]    @default([])
+  video     TestVideo @relation(fields: [videoId], references: [videoId])
 }
 
 model TestAuthor {
