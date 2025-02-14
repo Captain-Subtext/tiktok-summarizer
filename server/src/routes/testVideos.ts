@@ -3,6 +3,7 @@ import { prisma } from '../lib/db';
 import { VideoQuerySchema, VideoParamsSchema } from '../types/video';
 import { z } from 'zod';
 import { AppRequestHandler, AppError } from '../types/express';
+import { Router } from 'express';
 
 const router = express.Router();
 
@@ -81,10 +82,10 @@ const getTestVideoById: AppRequestHandler = async (req, res, next) => {
     res.sendSuccess({
       videoId: video.videoId,
       status: video.status,
-      author: {
-        name: video.author.name,
-        url: video.author.url
-      },
+      author: video.author ? {
+        name: video.author?.name || '',
+        url: video.author?.url || ''
+      } : null,
       description: video.description,
       hashtags: video.hashtags,
       thumbnail: video.thumbnail,
@@ -96,7 +97,43 @@ const getTestVideoById: AppRequestHandler = async (req, res, next) => {
   }
 };
 
-router.get('/test-videos', getTestVideos);
-router.get('/test-videos/:videoId', getTestVideoById);
+const deleteTestVideos: AppRequestHandler = async (req, res, next) => {
+  try {
+    const { videoIds } = req.body;
+    
+    if (!Array.isArray(videoIds)) {
+      const error: AppError = new Error('videoIds must be an array');
+      error.statusCode = 400;
+      next(error);
+      return;
+    }
+
+    // Delete in a transaction to ensure consistency
+    await prisma.$transaction(async (tx) => {
+      // First delete the analysis records
+      await tx.testAnalysis.deleteMany({
+        where: {
+          videoId: { in: videoIds }
+        }
+      });
+
+      // Then delete the videos
+      await tx.testVideo.deleteMany({
+        where: {
+          videoId: { in: videoIds }
+        }
+      });
+    });
+
+    res.sendSuccess({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Routes
+router.get('/', getTestVideos);
+router.get('/:videoId', getTestVideoById);
+router.delete('/', deleteTestVideos);
 
 export default router; 

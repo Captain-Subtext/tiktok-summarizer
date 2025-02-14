@@ -61,25 +61,36 @@ const processTestSummary: AppRequestHandler = async (req, res, next) => {
         }
       });
 
-      // Create or update analysis
-      const analysis = await tx.testAnalysis.upsert({
+      // Update video with summary
+      const updatedVideo = await tx.testVideo.update({
         where: { videoId: video.videoId },
-        update: {
-          summary: aiSummary
+        data: {
+          status: 'completed',
+          analysis: {
+            upsert: {
+              create: {
+                summary: aiSummary,
+                frames: []
+              },
+              update: {
+                summary: aiSummary
+              }
+            }
+          }
         },
-        create: {
-          videoId: video.videoId,
-          summary: aiSummary
+        include: {
+          author: true,
+          analysis: true
         }
       });
 
-      return { video, analysis, author };
+      return { video, updatedVideo, author };
     });
 
     res.sendSuccess({
-      ...videoData,
+      ...savedData.updatedVideo,
       aiSummary,
-      status: 'processing'
+      status: 'COMPLETED'
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -104,15 +115,17 @@ const createTestSummary: AppRequestHandler = async (req, res, next) => {
     const { videoId, text } = TestSummarySchema.parse(req.body);
     
     const video = await prisma.testVideo.update({
-      where: { id: videoId },
+      where: { videoId: videoId },
       data: {
         analysis: {
           create: {
             summary: text
           }
-        }
+        },
+        status: 'completed'
       },
       include: {
+        author: true,
         analysis: true
       }
     });

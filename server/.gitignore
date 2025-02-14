@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+
+# Build
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test output directories
+test_output/
+test_output/videos/
+test_output/frames/
+
+# Ensure the directories exist but are empty
+!test_output/
+!test_output/videos/
+!test_output/frames/
+!test_output/videos/.gitkeep
+!test_output/frames/.gitkeep

@@ -8,6 +8,15 @@ export class ApiError extends Error {
   }
 }
 
+export type ApiEndpoint = 
+  | 'TEST_VIDEOS'
+  | keyof typeof API_CONFIG.ENDPOINTS;
+
+const API_ENDPOINTS: Record<ApiEndpoint, string> = {
+  TEST_VIDEOS: '/api/test-videos',
+  ...API_CONFIG.ENDPOINTS,
+};
+
 export async function apiClient<T>(
   endpoint: keyof typeof API_CONFIG.ENDPOINTS,
   options?: {
